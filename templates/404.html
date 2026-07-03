@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}Not found · Athlete Bunker{% endblock %}
+{% block content %}
+<div class="card" style="text-align:center;padding:48px">
+  <h1>Not found</h1>
+  <p class="muted">That activity doesn't exist (it may have been deleted).</p>
+  <p><a href="{{ url_for('main.activities') }}">Back to activities</a></p>
+</div>
+{% endblock %}

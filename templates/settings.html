@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+{% block title %}Settings · Athlete Bunker{% endblock %}
+{% block content %}
+<h1>Athlete settings</h1>
+
+<div class="card">
+  <h2>Thresholds</h2>
+  <p class="muted">These drive every metric: TSS, IF, zones and the Performance
+    Management Chart. Update them when you retest — history is not recalculated
+    automatically, so accurate values matter most going forward.</p>
+  <form class="settings" method="post">
+    <label>Athlete name
+      <input name="athlete_name" value="{{ settings.athlete_name }}">
+    </label>
+    <label>Units
+      <select name="units">
+        <option value="imperial" {{ 'selected' if settings.units == 'imperial' }}>Imperial (mi, mph, yd)</option>
+        <option value="metric" {{ 'selected' if settings.units == 'metric' }}>Metric (km, km/h, m)</option>
+      </select>
+    </label>
+    <label>FTP — bike (watts)
+      <input name="ftp" type="number" step="1" value="{{ settings.ftp | round | int }}">
+    </label>
+    <label>LTHR — bike (bpm)
+      <input name="lthr_bike" type="number" step="1" value="{{ settings.lthr_bike | round | int }}">
+    </label>
+    <label>LTHR — run (bpm)
+      <input name="lthr_run" type="number" step="1" value="{{ settings.lthr_run | round | int }}">
+    </label>
+    <label>Run threshold pace (mm:ss {{ 'per mile' if settings.units == 'imperial' else 'per km' }})
+      <input name="threshold_pace_display" value="{{ pace_display }}" placeholder="7:15">
+    </label>
+    <label>Swim CSS pace (mm:ss {{ 'per 100 yd' if settings.units == 'imperial' else 'per 100 m' }})
+      <input name="swim_css_display" value="{{ css_display }}" placeholder="1:38">
+    </label>
+    <label>Max HR (bpm)
+      <input name="max_hr" type="number" step="1" value="{{ settings.max_hr | round | int }}">
+    </label>
+    <label>Resting HR (bpm)
+      <input name="resting_hr" type="number" step="1" value="{{ settings.resting_hr | round | int }}">
+    </label>
+    <label>Weight (kg)
+      <input name="weight_kg" type="number" step="0.1" value="{{ settings.weight_kg }}">
+    </label>
+    <label>Timezone offset from UTC (hours)
+      <input name="timezone_offset_hours" type="number" step="0.5" value="{{ settings.timezone_offset_hours }}">
+    </label>
+    <div style="align-self:end"><button class="primary" type="submit">Save settings</button></div>
+  </form>
+</div>
+
+<div class="chart-row">
+  <div class="card">
+    <h2>Bike power zones (of FTP)</h2>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Zone</th><th class="num">Range (W)</th></tr></thead>
+      <tbody>
+        {% set prev = namespace(v=0) %}
+        {% for ub in zones.power %}
+        <tr><td>{{ zone_labels[loop.index0] }}</td>
+            <td class="num">{{ prev.v | round | int }} – {{ ub | round | int }}</td></tr>
+        {% set prev.v = ub %}
+        {% endfor %}
+        <tr><td>{{ zone_labels[5] }}</td><td class="num">{{ prev.v | round | int }}+</td></tr>
+      </tbody>
+    </table></div>
+  </div>
+  <div class="card">
+    <h2>Heart-rate zones (of LTHR)</h2>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Zone</th><th class="num">Bike (bpm)</th><th class="num">Run (bpm)</th></tr></thead>
+      <tbody>
+        {% set pb = namespace(v=0) %}{% set pr = namespace(v=0) %}
+        {% for ub in zones.hr_bike %}
+        <tr><td>{{ zone_labels[loop.index0] }}</td>
+            <td class="num">{{ pb.v | round | int }} – {{ ub | round | int }}</td>
+            <td class="num">{{ pr.v | round | int }} – {{ zones.hr_run[loop.index0] | round | int }}</td></tr>
+        {% set pb.v = ub %}{% set pr.v = zones.hr_run[loop.index0] %}
+        {% endfor %}
+        <tr><td>{{ zone_labels[5] }}</td>
+            <td class="num">{{ pb.v | round | int }}+</td>
+            <td class="num">{{ pr.v | round | int }}+</td></tr>
+      </tbody>
+    </table></div>
+  </div>
+</div>
+
+<div class="chart-row">
+  <div class="card">
+    <h2>Run pace zones</h2>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Zone</th><th class="num">Pace</th></tr></thead>
+      <tbody>
+        {% for ub in zones.pace_run %}
+        <tr><td>{{ zone_labels[loop.index0] }}</td>
+            <td class="num">{{ 'slower than' if loop.first else 'to' }} {{ ub | pace('run', settings.units) }}</td></tr>
+        {% endfor %}
+        <tr><td>{{ zone_labels[5] }}</td>
+            <td class="num">faster than {{ zones.pace_run[-1] | pace('run', settings.units) }}</td></tr>
+      </tbody>
+    </table></div>
+  </div>
+  <div class="card">
+    <h2>Swim pace zones (of CSS)</h2>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Zone</th><th class="num">Pace</th></tr></thead>
+      <tbody>
+        {% for ub in zones.pace_swim %}
+        <tr><td>{{ zone_labels[loop.index0] }}</td>
+            <td class="num">{{ 'slower than' if loop.first else 'to' }} {{ ub | pace('swim', settings.units) }}</td></tr>
+        {% endfor %}
+        <tr><td>{{ zone_labels[5] }}</td>
+            <td class="num">faster than {{ zones.pace_swim[-1] | pace('swim', settings.units) }}</td></tr>
+      </tbody>
+    </table></div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+{% block title %}{{ a.name }} · Athlete Bunker{% endblock %}
+{% block content %}
+<div style="display:flex;align-items:baseline;gap:12px;flex-wrap:wrap">
+  <h1 style="margin-bottom:4px">{{ a.name }}</h1>
+  <span class="sport-badge"><span class="sport-dot {{ a.sport }}"></span>{{ a.sport | capitalize }}</span>
+  <span class="muted">{{ a.date_local }}</span>
+  {% if a.tss_method %}<span class="muted">TSS via {{ {'power':'power','pace':'pace (rTSS)','swim':'swim (sTSS)','hr':'heart rate (hrTSS)','estimated':'estimate'}[a.tss_method] }}</span>{% endif %}
+</div>
+
+<div class="tiles">
+  <div class="tile"><div class="label">Duration</div>
+    <div class="value">{{ (a.moving_s or a.duration_s) | duration }}</div>
+    {% if a.moving_s and a.duration_s and a.duration_s - a.moving_s > 60 %}<div class="sub">{{ a.duration_s | duration }} elapsed</div>{% endif %}
+  </div>
+  <div class="tile"><div class="label">Distance</div>
+    <div class="value">{{ a.distance_m | distance(a.sport, settings.units) }}</div></div>
+  <div class="tile"><div class="label">{{ 'Pace' if a.sport in ('run','swim') else 'Speed' }}</div>
+    <div class="value" style="font-size:20px">{{ a.avg_speed | speed_or_pace(a.sport, settings.units) }}</div>
+    {% if a.ngp_speed %}<div class="sub">NGP {{ a.ngp_speed | pace('run', settings.units) }}</div>{% endif %}
+  </div>
+  <div class="tile"><div class="label">TSS</div>
+    <div class="value">{{ a.tss | round(1) if a.tss else '–' }}</div>
+    {% if a.intensity %}<div class="sub">IF {{ '%.2f' | format(a.intensity) }}</div>{% endif %}
+  </div>
+  {% if a.avg_hr %}
+  <div class="tile"><div class="label">Heart rate</div>
+    <div class="value">{{ a.avg_hr | round | int }}</div>
+    <div class="sub">max {{ a.max_hr | round | int if a.max_hr else '–' }} bpm</div></div>
+  {% endif %}
+  {% if a.avg_power %}
+  <div class="tile"><div class="label">Power</div>
+    <div class="value">{{ a.np | round | int if a.np else a.avg_power | round | int }}<span style="font-size:14px"> W</span></div>
+    <div class="sub">{{ 'NP · avg ' ~ (a.avg_power | round | int) ~ ' W' if a.np else 'average' }}</div></div>
+  {% endif %}
+  {% if a.elev_gain_m %}
+  <div class="tile"><div class="label">Climbing</div>
+    <div class="value" style="font-size:20px">{{ a.elev_gain_m | elev(settings.units) }}</div></div>
+  {% endif %}
+</div>
+
+<div class="tiles">
+  {% if a.ef %}<div class="tile"><div class="label">Efficiency factor</div><div class="value" style="font-size:20px">{{ a.ef }}</div><div class="sub">output per heartbeat</div></div>{% endif %}
+  {% if a.vi %}<div class="tile"><div class="label">Variability index</div><div class="value" style="font-size:20px">{{ a.vi }}</div><div class="sub">NP ÷ avg power</div></div>{% endif %}
+  {% if a.decoupling is not none %}<div class="tile"><div class="label">Decoupling</div><div class="value" style="font-size:20px">{{ a.decoupling }}%</div><div class="sub">{{ 'well coupled' if a.decoupling < 5 else 'aerobic drift' }}</div></div>{% endif %}
+  {% if a.avg_cadence %}<div class="tile"><div class="label">Cadence</div><div class="value" style="font-size:20px">{{ a.avg_cadence | round | int }}</div><div class="sub">{{ 'spm' if a.sport == 'run' else 'rpm' }}</div></div>{% endif %}
+  {% if a.work_kj %}<div class="tile"><div class="label">Work</div><div class="value" style="font-size:20px">{{ a.work_kj | round | int }} kJ</div></div>{% endif %}
+  {% if a.calories %}<div class="tile"><div class="label">Calories</div><div class="value" style="font-size:20px">{{ a.calories | round | int }}</div></div>{% endif %}
+</div>
+
+{% if has_streams %}
+<div class="card">
+  <h2>Charts</h2>
+  <div id="stream-charts" data-activity="{{ a.id }}" data-sport="{{ a.sport }}"></div>
+</div>
+{% endif %}
+
+<div class="detail-grid">
+  <div>
+    {% if a.has_gps %}
+    <div class="card"><h2>Route</h2><div id="map"></div></div>
+    {% endif %}
+
+    {% if laps %}
+    <div class="card">
+      <h2>Laps</h2>
+      <div class="table-wrap"><table>
+        <thead><tr><th>#</th><th class="num">Time</th><th class="num">Distance</th>
+          <th class="num">{{ 'Pace' if a.sport in ('run','swim') else 'Speed' }}</th>
+          <th class="num">Avg HR</th><th class="num">Avg Pwr</th><th class="num">Cad</th></tr></thead>
+        <tbody>
+          {% for l in laps %}
+          <tr><td>{{ l.lap_index }}</td>
+            <td class="num">{{ l.duration_s | duration }}</td>
+            <td class="num">{{ l.distance_m | distance(a.sport, settings.units) }}</td>
+            <td class="num">{{ l.avg_speed | speed_or_pace(a.sport, settings.units) }}</td>
+            <td class="num">{{ l.avg_hr | round | int if l.avg_hr else '–' }}</td>
+            <td class="num">{{ l.avg_power | round | int if l.avg_power else '–' }}</td>
+            <td class="num">{{ l.avg_cadence | round | int if l.avg_cadence else '–' }}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table></div>
+    </div>
+    {% endif %}
+  </div>
+
+  <div>
+    {% for kind, zones in [('hr', a.hr_zones), ('power', a.power_zones), ('pace', a.pace_zones)] %}
+    {% if zones %}
+    <div class="card">
+      <h2>{{ {'hr': 'Heart-rate zones', 'power': 'Power zones', 'pace': 'Pace zones'}[kind] }}</h2>
+      <div class="zone-bars">
+        {% set total = zones | sum %}
+        {% for secs in zones %}
+        <div class="zone-bar-row">
+          <span class="zlabel">{{ zone_labels[loop.index0] }}</span>
+          <div class="zone-track">
+            <div class="zone-fill" style="width:{{ (secs / total * 100) | round(1) if total else 0 }}%;background:var(--z{{ loop.index }})"></div>
+          </div>
+          <span class="ztime">{{ secs | duration }}</span>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+    {% endfor %}
+
+    {% if peaks %}
+    <div class="card">
+      <h2>Peaks</h2>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Duration</th><th class="num">Power</th><th class="num">HR</th><th class="num">Speed</th></tr></thead>
+        <tbody>
+          {% set durations = peaks | map(attribute='duration_s') | unique | sort %}
+          {% for d in durations %}
+          <tr>
+            <td>{{ d | duration }}</td>
+            {% for metric in ['power', 'hr', 'speed'] %}
+            {% set match = peaks | selectattr('metric', 'equalto', metric) | selectattr('duration_s', 'equalto', d) | list %}
+            <td class="num">
+              {% if match %}
+                {% if metric == 'power' %}{{ match[0].value | round | int }} W
+                {% elif metric == 'hr' %}{{ match[0].value | round | int }} bpm
+                {% else %}{{ match[0].value | speed_or_pace(a.sport, settings.units) }}{% endif %}
+              {% else %}–{% endif %}
+            </td>
+            {% endfor %}
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table></div>
+    </div>
+    {% endif %}
+
+    <div class="card">
+      <h2>Manage</h2>
+      <p class="muted" style="margin-top:0">Source: {{ a.source_file or 'unknown' }}</p>
+      <form method="post" action="{{ url_for('main.activity_delete', activity_id=a.id) }}"
+            onsubmit="return confirm('Delete this activity?')">
+        <button class="danger" type="submit">Delete activity</button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{% if has_streams %}
+<script src="{{ url_for('static', filename='vendor/chart.umd.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/charts.js') }}"></script>
+{% endif %}
+{% if a.has_gps %}
+<link rel="stylesheet" href="{{ url_for('static', filename='vendor/leaflet.css') }}">
+<script src="{{ url_for('static', filename='vendor/leaflet.js') }}"></script>
+{% endif %}
+{% if has_streams or a.has_gps %}
+<script src="{{ url_for('static', filename='js/activity.js') }}"></script>
+{% endif %}
+{% endblock %}

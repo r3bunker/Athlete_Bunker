@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}Athlete Bunker{% endblock %}</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpolygon points='8,2 14,14 2,14' fill='%232a78d6'/%3E%3C/svg%3E">
+<script>
+  // Apply saved theme before first paint
+  (function () {
+    var t = localStorage.getItem("theme");
+    if (t) document.documentElement.dataset.theme = t;
+  })();
+</script>
+</head>
+<body data-units="{{ settings.units }}">
+<header class="topbar">
+  <a class="brand" href="{{ url_for('main.dashboard') }}">
+    <span class="brand-mark">▲</span> Athlete Bunker
+  </a>
+  <nav>
+    <a href="{{ url_for('main.dashboard') }}" class="{{ 'active' if request.endpoint == 'main.dashboard' }}">Dashboard</a>
+    <a href="{{ url_for('main.calendar_view') }}" class="{{ 'active' if request.endpoint == 'main.calendar_view' }}">Calendar</a>
+    <a href="{{ url_for('main.activities') }}" class="{{ 'active' if request.endpoint in ('main.activities', 'main.activity_detail') }}">Activities</a>
+    <a href="{{ url_for('main.upload_page') }}" class="{{ 'active' if request.endpoint == 'main.upload_page' }}">Upload</a>
+    <a href="{{ url_for('main.settings_page') }}" class="{{ 'active' if request.endpoint == 'main.settings_page' }}">Settings</a>
+  </nav>
+  <button id="theme-toggle" class="theme-toggle" title="Toggle light/dark">◐</button>
+</header>
+<main>
+{% block content %}{% endblock %}
+</main>
+<script>
+  document.getElementById("theme-toggle").addEventListener("click", function () {
+    var root = document.documentElement;
+    var dark = matchMedia("(prefers-color-scheme: dark)").matches;
+    var cur = root.dataset.theme || (dark ? "dark" : "light");
+    var next = cur === "dark" ? "light" : "dark";
+    localStorage.setItem("theme", next);
+    root.dataset.theme = next;
+    location.reload(); // charts re-read theme colors on load
+  });
+</script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

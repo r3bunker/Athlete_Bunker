@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}Upload · Athlete Bunker{% endblock %}
+{% block content %}
+<h1>Upload activities</h1>
+
+<div class="card">
+  <div class="dropzone" id="dropzone">
+    <p style="font-size:32px;margin:0">⬆</p>
+    <p><b>Drop Garmin files here</b> or click to choose</p>
+    <p class="muted">.fit · .fit.gz · .tcx · .gpx — multiple files at once is fine.<br>
+       On Garmin Connect: activity → gear icon → “Export Original” (FIT).</p>
+    <input type="file" id="file-input" multiple accept=".fit,.gz,.tcx,.gpx" style="display:none">
+  </div>
+  <ul class="upload-results" id="results"></ul>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+  const zone = document.getElementById("dropzone");
+  const input = document.getElementById("file-input");
+  const results = document.getElementById("results");
+
+  zone.addEventListener("click", () => input.click());
+  ["dragover", "dragenter"].forEach((ev) =>
+    zone.addEventListener(ev, (e) => { e.preventDefault(); zone.classList.add("hover"); }));
+  ["dragleave", "drop"].forEach((ev) =>
+    zone.addEventListener(ev, (e) => { e.preventDefault(); zone.classList.remove("hover"); }));
+  zone.addEventListener("drop", (e) => upload(e.dataTransfer.files));
+  input.addEventListener("change", () => upload(input.files));
+
+  async function upload(files) {
+    if (!files.length) return;
+    const li = document.createElement("li");
+    li.textContent = `Uploading ${files.length} file(s)…`;
+    results.prepend(li);
+    const form = new FormData();
+    for (const f of files) form.append("files", f);
+    try {
+      const res = await fetch("/api/upload", { method: "POST", body: form });
+      const data = await res.json();
+      li.remove();
+      for (const r of data) {
+        const item = document.createElement("li");
+        if (r.status === "ok") {
+          item.innerHTML = `<span class="status-ok">✓</span> ${r.file} — ` +
+            `<a href="/activity/${r.id}">${r.name}</a> (${r.date}` +
+            (r.tss ? `, ${Math.round(r.tss)} TSS` : "") + `)`;
+        } else if (r.status === "duplicate") {
+          item.innerHTML = `<span class="status-duplicate">↺</span> ${r.file} — already uploaded`;
+        } else {
+          item.innerHTML = `<span class="status-error">✗</span> ${r.file} — ${r.message}`;
+        }
+        results.prepend(item);
+      }
+    } catch (err) {
+      li.textContent = `Upload failed: ${err}`;
+    }
+    input.value = "";
+  }
+})();
+</script>
+{% endblock %}

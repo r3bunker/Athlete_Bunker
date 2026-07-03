@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}Activities · Athlete Bunker{% endblock %}
+{% block content %}
+<h1>Activities</h1>
+
+<div class="filter-row">
+  <a href="{{ url_for('main.activities') }}" class="{{ 'active' if not sport }}">All</a>
+  <a href="{{ url_for('main.activities', sport='swim') }}" class="{{ 'active' if sport == 'swim' }}">Swim</a>
+  <a href="{{ url_for('main.activities', sport='bike') }}" class="{{ 'active' if sport == 'bike' }}">Bike</a>
+  <a href="{{ url_for('main.activities', sport='run') }}" class="{{ 'active' if sport == 'run' }}">Run</a>
+  <a href="{{ url_for('main.activities', sport='other') }}" class="{{ 'active' if sport == 'other' }}">Other</a>
+</div>
+
+<div class="card">
+{% if activities %}
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>Date</th><th>Sport</th><th>Name</th>
+        <th class="num">Duration</th><th class="num">Distance</th>
+        <th class="num">Pace/Speed</th><th class="num">Avg HR</th>
+        <th class="num">Power</th><th class="num">TSS</th><th class="num">IF</th>
+        <th class="num">EF</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for a in activities %}
+      <tr class="clickable" onclick="location='{{ url_for('main.activity_detail', activity_id=a.id) }}'">
+        <td>{{ a.date_local }}</td>
+        <td><span class="sport-badge"><span class="sport-dot {{ a.sport }}"></span>{{ a.sport | capitalize }}</span></td>
+        <td>{{ a.name }}</td>
+        <td class="num">{{ (a.moving_s or a.duration_s) | duration }}</td>
+        <td class="num">{{ a.distance_m | distance(a.sport, settings.units) }}</td>
+        <td class="num">{{ a.avg_speed | speed_or_pace(a.sport, settings.units) }}</td>
+        <td class="num">{{ a.avg_hr | round | int if a.avg_hr else '–' }}</td>
+        <td class="num">{{ (a.np or a.avg_power) | round | int if (a.np or a.avg_power) else '–' }}{{ ' W' if (a.np or a.avg_power) }}</td>
+        <td class="num">{{ a.tss | round(1) if a.tss else '–' }}</td>
+        <td class="num">{{ '%.2f' | format(a.intensity) if a.intensity else '–' }}</td>
+        <td class="num">{{ a.ef if a.ef else '–' }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+<p class="empty-note">No activities{{ ' for this sport' if sport }} yet — <a href="{{ url_for('main.upload_page') }}">upload some files</a>.</p>
+{% endif %}
+</div>
+{% endblock %}

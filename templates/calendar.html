@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Calendar · Athlete Bunker{% endblock %}
+{% block content %}
+<div class="cal-nav">
+  <h1 style="margin:0">{{ month_name }} {{ year }}</h1>
+  <a href="{{ url_for('main.calendar_view', year=prev.year, month=prev.month) }}">← {{ prev.strftime('%b') }}</a>
+  <a href="{{ url_for('main.calendar_view', year=next.year, month=next.month) }}">{{ next.strftime('%b') }} →</a>
+  <a href="{{ url_for('main.calendar_view') }}" class="muted">Today</a>
+</div>
+
+<div class="cal-grid">
+  {% for name in ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'] %}
+    <div class="cal-head">{{ name }}</div>
+  {% endfor %}
+  <div class="cal-head">Week total</div>
+
+  {% for week in weeks %}
+    {% for day in week.days %}
+    <div class="cal-day {{ 'out' if not day.in_month }} {{ 'today' if day.is_today }}">
+      <span class="d">{{ day.date.day }}</span>
+      {% for a in day.activities %}
+      <a class="cal-act {{ a.sport }}" href="{{ url_for('main.activity_detail', activity_id=a.id) }}"
+         title="{{ a.name }} — {{ (a.moving_s or a.duration_s) | duration }}">
+        {{ a.sport | capitalize }} · {{ (a.moving_s or a.duration_s) | duration }}
+        {%- if a.tss %} · {{ a.tss | round | int }} TSS{% endif %}
+      </a>
+      {% endfor %}
+    </div>
+    {% endfor %}
+    <div class="cal-week-total">
+      <b>{{ week.tss | round | int }}</b> TSS<br>
+      {{ week.secs | hours }} h
+    </div>
+  {% endfor %}
+</div>
+{% endblock %}
