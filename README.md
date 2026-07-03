@@ -12,7 +12,7 @@ pip install -r requirements.txt
 python app.py
 ```
 
-Open http://127.0.0.1:5000, go to **Settings** and enter your thresholds
+Open http://127.0.0.1:5002, go to **Settings** and enter your thresholds
 (FTP, LTHR, run threshold pace, swim CSS), then drag your Garmin files onto
 the **Upload** page.
 
