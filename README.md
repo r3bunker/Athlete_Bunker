@@ -82,6 +82,7 @@ file is detected and skipped.
   computed (same as TrainingPeaks' default behavior).
 - Units: imperial shows miles/mph, /mi run pace and /100 yd swim pace; metric
   shows km, /km and /100 m.
+- The UI is a dark Material You (Material 3) theme.
 
 ## Layout
 

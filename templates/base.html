@@ -5,14 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{% block title %}Athlete Bunker{% endblock %}</title>
 <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpolygon points='8,2 14,14 2,14' fill='%232a78d6'/%3E%3C/svg%3E">
-<script>
-  // Apply saved theme before first paint
-  (function () {
-    var t = localStorage.getItem("theme");
-    if (t) document.documentElement.dataset.theme = t;
-  })();
-</script>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpolygon points='8,2 14,14 2,14' fill='%23a8c7fa'/%3E%3C/svg%3E">
 </head>
 <body data-units="{{ settings.units }}">
 <header class="topbar">
@@ -20,28 +13,21 @@
     <span class="brand-mark">▲</span> Athlete Bunker
   </a>
   <nav>
-    <a href="{{ url_for('main.dashboard') }}" class="{{ 'active' if request.endpoint == 'main.dashboard' }}">Dashboard</a>
-    <a href="{{ url_for('main.calendar_view') }}" class="{{ 'active' if request.endpoint == 'main.calendar_view' }}">Calendar</a>
-    <a href="{{ url_for('main.activities') }}" class="{{ 'active' if request.endpoint in ('main.activities', 'main.activity_detail') }}">Activities</a>
-    <a href="{{ url_for('main.upload_page') }}" class="{{ 'active' if request.endpoint == 'main.upload_page' }}">Upload</a>
-    <a href="{{ url_for('main.settings_page') }}" class="{{ 'active' if request.endpoint == 'main.settings_page' }}">Settings</a>
+    <a href="{{ url_for('main.dashboard') }}" class="{{ 'active' if request.endpoint == 'main.dashboard' }}">
+      <svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>Dashboard</a>
+    <a href="{{ url_for('main.calendar_view') }}" class="{{ 'active' if request.endpoint == 'main.calendar_view' }}">
+      <svg viewBox="0 0 24 24"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11z"/></svg>Calendar</a>
+    <a href="{{ url_for('main.activities') }}" class="{{ 'active' if request.endpoint in ('main.activities', 'main.activity_detail') }}">
+      <svg viewBox="0 0 24 24"><path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/></svg>Activities</a>
+    <a href="{{ url_for('main.upload_page') }}" class="{{ 'active' if request.endpoint == 'main.upload_page' }}">
+      <svg viewBox="0 0 24 24"><path d="M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5v-2z"/></svg>Upload</a>
+    <a href="{{ url_for('main.settings_page') }}" class="{{ 'active' if request.endpoint == 'main.settings_page' }}">
+      <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>Settings</a>
   </nav>
-  <button id="theme-toggle" class="theme-toggle" title="Toggle light/dark">◐</button>
 </header>
 <main>
 {% block content %}{% endblock %}
 </main>
-<script>
-  document.getElementById("theme-toggle").addEventListener("click", function () {
-    var root = document.documentElement;
-    var dark = matchMedia("(prefers-color-scheme: dark)").matches;
-    var cur = root.dataset.theme || (dark ? "dark" : "light");
-    var next = cur === "dark" ? "light" : "dark";
-    localStorage.setItem("theme", next);
-    root.dataset.theme = next;
-    location.reload(); // charts re-read theme colors on load
-  });
-</script>
 {% block scripts %}{% endblock %}
 </body>
 </html>

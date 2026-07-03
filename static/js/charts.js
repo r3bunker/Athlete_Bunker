@@ -10,7 +10,8 @@ const AB = (() => {
     muted: css("--muted"),
     grid: css("--grid"),
     baseline: css("--baseline"),
-    surface: css("--surface"),
+    surface: css("--surface-container"),      // cards, where charts live
+    tooltipBg: css("--surface-container-high"),
     sports: {
       swim: css("--c-swim"),
       bike: css("--c-bike"),
@@ -31,7 +32,7 @@ const AB = (() => {
     Chart.defaults.plugins.legend.labels.boxWidth = 10;
     Chart.defaults.plugins.legend.labels.boxHeight = 10;
     Chart.defaults.plugins.legend.labels.color = t.text2;
-    Chart.defaults.plugins.tooltip.backgroundColor = t.surface;
+    Chart.defaults.plugins.tooltip.backgroundColor = t.tooltipBg;
     Chart.defaults.plugins.tooltip.titleColor = t.text;
     Chart.defaults.plugins.tooltip.bodyColor = t.text2;
     Chart.defaults.plugins.tooltip.borderColor = t.baseline;
